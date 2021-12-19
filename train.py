@@ -11,8 +11,8 @@ UseRational = True
 
 if __name__ == '__main__':
     batch_size = 256
-    train_dataset = mnist.MNIST(root='./train', train=True, transform=ToTensor())
-    test_dataset = mnist.MNIST(root='./test', train=False, transform=ToTensor())
+    train_dataset = mnist.MNIST(root='./train', download=True, train=True, transform=ToTensor())
+    test_dataset = mnist.MNIST(root='./test', download=True, train=False, transform=ToTensor())
     train_loader = DataLoader(train_dataset, batch_size=batch_size)
     test_loader = DataLoader(test_dataset, batch_size=batch_size)
 
@@ -44,5 +44,5 @@ if __name__ == '__main__':
             correct += np.sum(_.numpy(), axis=-1)
             _sum += _.shape[0]
 
-        print('accuracy: {:.2f}'.format(correct / _sum))
+        print('accuracy: {:.6f}'.format(correct / _sum))
         torch.save(model, 'models/mnist_{:.2f}.pkl'.format(correct / _sum))
