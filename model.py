@@ -2,49 +2,43 @@ from torch.nn import Module
 from torch import nn
 from rational import *
 
+# modified to be styled after github.com/erykml/medium_articles
+
 class Model(Module):
-    def __init__(self, UseRational):
+    def __init__(self, n_classes, UseRational=False, UseRELU=False):
         super(Model, self).__init__()
-        self.conv1 = nn.Conv2d(1, 6, 5)
+        
+        # Determine activation to use
         if UseRational:
-            self.R1 = Rational()
+            activation = Rational()
+        else if UseRELU:
+            activation = nn.ReLU()
         else:
-            self.R1 = nn.ReLU()
-        self.pool1 = nn.MaxPool2d(2)
-        self.conv2 = nn.Conv2d(6, 16, 5)
-        if UseRational:
-            self.R2 = Rational()
-        else:
-            self.R2 = nn.ReLU()
-        self.pool2 = nn.MaxPool2d(2)
-        self.fc1 = nn.Linear(256, 120)
-        if UseRational:
-            self.R3 = Rational()
-        else:
-            self.R3 = nn.ReLU()
-        self.fc2 = nn.Linear(120, 84)
-        if UseRational:
-            self.R4 = Rational()
-        else:
-            self.R4 = nn.ReLU()
-        self.fc3 = nn.Linear(84, 10)
-        if UseRational:
-            self.R5 = Rational()
-        else:
-            self.R5 = nn.ReLU()
+            activation = nn.Tanh()
+
+        # Define the feature extractor
+        self.feature_extractor = nn.Sequential(
+            nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5, stride=1),
+            activation,
+            nn.AvgPool2d(kernel_size=2),
+            nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5, stride=1),
+            activation,
+            nn.AvgPool2d(kernel_size=2),
+            nn.Conv2d(in_channels=16, out_channels=120, kernel_size=5, stride=1),
+            activation
+        )
+
+        self.classifier = nn.Sequential(
+            nn.Linear(in_features=120, out_features=84),
+            activation,
+            nn.Linear(in_features=84, out_features=n_classes)
+        )
+
 
     def forward(self, x):
-        y = self.conv1(x)
-        y = self.R1(y)
-        y = self.pool1(y)
-        y = self.conv2(y)
-        y = self.R2(y)
-        y = self.pool2(y)
-        y = y.view(y.shape[0], -1)
-        y = self.fc1(y)
-        y = self.R3(y)
-        y = self.fc2(y)
-        y = self.R4(y)
-        y = self.fc3(y)
-        y = self.R5(y)
-        return y
+        x = self.feature_extractor(x)
+        x = torch.flatten(x,1)
+        logits = self.classifier(x)
+        probs = nn.functional.softmax(x)
+        
+        return logits, probs
