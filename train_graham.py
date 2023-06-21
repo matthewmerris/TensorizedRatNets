@@ -1,5 +1,5 @@
-rom typing import List, Union
-from model import Model, SimpleModel
+from typing import List, Union
+from models import Lenet5, Lenet300100
 import numpy as np
 import torch
 from torchvision.datasets import mnist
@@ -17,6 +17,7 @@ data_dir = "data"
 # activations_dir = f"{data_dir}/lenet-mnist/activations"
 device = sys.argv[1] if len(sys.argv) > 1 else "cpu"
 assert device in ["cpu", "cuda"]
+
 
 class Storage:
     def __init__(self):
@@ -51,7 +52,7 @@ class Storage:
             layers = list(iter_fn())
 
         name_idx = 0
-	for mod in layers:
+        for mod in layers:
             if isinstance(mod, torch.nn.Module):
                 mod_name = f"{mod.__class__.__name__}_{name_idx}"
                 name_idx += 1
@@ -75,16 +76,17 @@ class Storage:
             out[key] = torch.stack(val).cpu().detach().numpy()
         return out
 
+
 if __name__ == '__main__':
     batch_size = 256
+    N_CLASSES = 10
     train_dataset = mnist.MNIST(root=f'{data_dir}', train=True, transform=ToTensor(), download=True)
 
     test_dataset = mnist.MNIST(root=f'{data_dir}', train=False, transform=ToTensor(), download=True)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, drop_last=True)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, drop_last=True)
 
-
-    model = SimpleModel(2, 32) # Model(UseRational)
+    model = Lenet300100(N_CLASSES, UseRational)  # Model(UseRational)
     model.to(device)
     layers = list(model.named_children())
     breakpoint()
@@ -116,9 +118,8 @@ if __name__ == '__main__':
             loss.backward()
             sgd.step()
 
-
         epoch_save_dir_train = f"{activations_dir}/train/{epoch}"
-	epoch_save_dir_test = f"{activations_dir}/test/{epoch}"
+        epoch_save_dir_test = f"{activations_dir}/test/{epoch}"
 
         # delete the old data
         shutil.rmtree(epoch_save_dir_test)
@@ -129,7 +130,6 @@ if __name__ == '__main__':
         save_data = storage.saveable()
         for key, item in save_data.items():
             np.save(f"{epoch_save_dir_train}/{key}.npy", item)
-
 
         correct = 0
         seen = 0
@@ -143,7 +143,6 @@ if __name__ == '__main__':
             predict_ys = predict_y.argmax(dim=-1)
             correct += (predict_ys == test_label).sum().item()
             seen += len(test_label)
-
 
         save_data = storage.saveable()
         for key, item in save_data.items():

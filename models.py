@@ -2,16 +2,15 @@ from torch.nn import Module
 from torch import nn
 from rational import *
 
-# modified to be styled after github.com/erykml/medium_articles
 
-class Model(Module):
+class Lenet5(Module):
     def __init__(self, n_classes, UseRational=False, UseRELU=False):
-        super(Model, self).__init__()
-        
+        super(Lenet5, self).__init__()
+
         # Determine activation to use
         if UseRational:
             activation = Rational()
-        else if UseRELU:
+        elif UseRELU:
             activation = nn.ReLU()
         else:
             activation = nn.Tanh()
@@ -34,11 +33,37 @@ class Model(Module):
             nn.Linear(in_features=84, out_features=n_classes)
         )
 
+    def forward(self, x):
+        x = self.feature_extractor(x)
+        x = torch.flatten(x, 1)
+        logits = self.classifier(x)
+        probs = nn.functional.softmax(x)
+
+        return logits, probs
+
+class Lenet300100(Module):
+    def __init__(self, n_classes, UseRational=False, UseRELU=False):
+        super(Lenet300100, self).__init__()
+
+        # Determine activation to use
+        if UseRational:
+            activation = Rational()
+        elif UseRELU:
+            activation = nn.ReLU()
+        else:
+            activation = nn.Tanh()
+
+        # Define the feature extractor
+        self.feature_extractor = nn.Sequential(
+            nn.Linear(28*28, 300),
+            activation,
+            nn.Linear(300,100),
+            activation,
+            nn.Linear(100,n_classes)
+        )
+
 
     def forward(self, x):
         x = self.feature_extractor(x)
-        x = torch.flatten(x,1)
-        logits = self.classifier(x)
-        probs = nn.functional.softmax(x)
-        
-        return logits, probs
+
+        return x
