@@ -3,33 +3,43 @@ from torch import nn
 from rational import *
 
 class Model(Module):
-    def __init__(self, UseRational):
+    def __init__(self, ActivationType):
         super(Model, self).__init__()
         self.conv1 = nn.Conv2d(1, 6, 5)
-        if UseRational:
+        if ActivationType == 1:
             self.R1 = Rational()
+        elif ActivationType == 2:
+            self.R1 = nn.ELU()
         else:
             self.R1 = nn.ReLU()
         self.pool1 = nn.MaxPool2d(2)
         self.conv2 = nn.Conv2d(6, 16, 5)
-        if UseRational:
+        if ActivationType == 1:
             self.R2 = Rational()
+        elif ActivationType == 2:
+            self.R2 = nn.ELU()
         else:
             self.R2 = nn.ReLU()
         self.pool2 = nn.MaxPool2d(2)
         self.fc1 = nn.Linear(256, 120)
-        if UseRational:
+        if ActivationType == 1:
             self.R3 = Rational()
+        elif ActivationType == 2:
+            self.R3 = nn.ELU()
         else:
             self.R3 = nn.ReLU()
         self.fc2 = nn.Linear(120, 84)
-        if UseRational:
+        if ActivationType == 1:
             self.R4 = Rational()
+        elif ActivationType == 2:
+            self.R4 = nn.ELU()
         else:
             self.R4 = nn.ReLU()
         self.fc3 = nn.Linear(84, 10)
-        if UseRational:
+        if ActivationType == 1:
             self.R5 = Rational()
+        elif ActivationType == 2:
+            self.R5 = nn.ELU()
         else:
             self.R5 = nn.ReLU()
 

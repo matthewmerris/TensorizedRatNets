@@ -7,7 +7,7 @@ from torch.optim import SGD
 from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor
 
-UseRational = True
+ActivationType = 2      # 0 - ReLU, 1 - Rational function, 2 - ELU
 
 if __name__ == '__main__':
     batch_size = 256
@@ -16,7 +16,7 @@ if __name__ == '__main__':
     train_loader = DataLoader(train_dataset, batch_size=batch_size)
     test_loader = DataLoader(test_dataset, batch_size=batch_size)
 
-    model = Model(UseRational)
+    model = Model(ActivationType)
     sgd = SGD(model.parameters(), lr=1e-1)
     cost = CrossEntropyLoss()
     epoch = 100
