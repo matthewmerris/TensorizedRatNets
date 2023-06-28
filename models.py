@@ -3,6 +3,17 @@ from torch import nn
 from rational import *
 
 
+class LinearBlock(nn.Module):
+    def __init__(self, n_dim_in: int, n_dim_out: int):
+        super().__init__()
+        self.linear = nn.Linear(n_dim_in, n_dim_out)
+        self.rat = Rational()
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        y = self.linear(x)
+        y = self.rat(y)
+        return y
+
 class Lenet5(Module):
     def __init__(self, n_classes, UseRational=False, UseRELU=False):
         super(Lenet5, self).__init__()
@@ -42,7 +53,7 @@ class Lenet5(Module):
         return logits, probs
 
 class Lenet300100(Module):
-    def __init__(self, n_classes, UseRational=False, UseRELU=False):
+    def __init__(self, UseRational=False, UseRELU=False):
         super(Lenet300100, self).__init__()
 
         # Determine activation to use
@@ -54,16 +65,25 @@ class Lenet300100(Module):
             activation = nn.Tanh()
 
         # Define the feature extractor
-        self.feature_extractor = nn.Sequential(
-            nn.Linear(28*28, 300),
-            activation,
-            nn.Linear(300,100),
-            activation,
-            nn.Linear(100,n_classes)
-        )
+        # self.feature_extractor = nn.Sequential(
+        #     nn.Linear(28*28, 300),
+        #     activation,
+        #     nn.Linear(300,100),
+        #     activation,
+        #     nn.Linear(100,n_classes)
+        # )
+
+        # Alternate approach, using ModuleDict
+        self.layers = nn.ModuleDict({
+            'layer_0' : LinearBlock(28*28, 300),
+            'layer_1' : LinearBlock(300,100),
+            'layer_2' : nn.Linear(100,10)
+        })
 
 
     def forward(self, x):
-        x = self.feature_extractor(x)
+        # x = self.feature_extractor(x)
+        for layer in self.layers.values():
+            x = layer(x)
 
         return x

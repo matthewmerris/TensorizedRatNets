@@ -86,7 +86,7 @@ if __name__ == '__main__':
     train_loader = DataLoader(train_dataset, batch_size=batch_size, drop_last=True)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, drop_last=True)
 
-    model = Lenet300100(N_CLASSES, UseRational)  # Model(UseRational)
+    model = Lenet300100(UseRational)  # Model(UseRational)
     model.to(device)
     layers = list(model.named_children())
     breakpoint()
