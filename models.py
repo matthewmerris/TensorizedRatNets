@@ -83,7 +83,9 @@ class Lenet300100(Module):
 
     def forward(self, x):
         # x = self.feature_extractor(x)
+        x = torch.flatten(x, start_dim=1)
         for layer in self.layers.values():
             x = layer(x)
+        # breakpoint()
 
         return x

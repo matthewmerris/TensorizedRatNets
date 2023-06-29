@@ -89,7 +89,7 @@ if __name__ == '__main__':
     model = Lenet300100(UseRational)  # Model(UseRational)
     model.to(device)
     layers = list(model.named_children())
-    breakpoint()
+    # breakpoint()
 
     run_data_dir = f"{data_dir}/{model.__class__.__name__}"
     activations_dir = f"{run_data_dir}/activations"
@@ -109,7 +109,9 @@ if __name__ == '__main__':
         storage.reset()
         for idx, (train_x, train_label) in enumerate(train_loader):
             label_np = np.zeros((train_label.shape[0], 10))
+            # breakpoint()
             train_x, train_label = train_x.to(device), train_label.to(device)
+            # breakpoint()
             sgd.zero_grad()
             predict_y = model(train_x.float())
             loss = cost(predict_y, train_label.long())
@@ -121,9 +123,14 @@ if __name__ == '__main__':
         epoch_save_dir_train = f"{activations_dir}/train/{epoch}"
         epoch_save_dir_test = f"{activations_dir}/test/{epoch}"
 
-        # delete the old data
-        shutil.rmtree(epoch_save_dir_test)
-        shutil.rmtree(epoch_save_dir_train)
+        # delete the old data, if its there
+        if os.path.exists(epoch_save_dir_test):
+            shutil.rmtree(epoch_save_dir_test)
+
+        if os.path.exists(epoch_save_dir_train):
+            shutil.rmtree(epoch_save_dir_train)
+
+        # breakpoint()
         os.makedirs(epoch_save_dir_train, exist_ok=True)
         os.makedirs(epoch_save_dir_test, exist_ok=True)
 
@@ -148,7 +155,7 @@ if __name__ == '__main__':
         for key, item in save_data.items():
             np.save(f"{epoch_save_dir_test}/{key}.npy", item)
 
-        print('accuracy: {:.2f}'.format(correct / seen))
+        print('accuracy: {:.6f}'.format(correct / seen))
 
         os.makedirs(model_save_dir, exist_ok=True)
         torch.save(model.state_dict(), f"{model_save_dir}/model_state_{epoch}.pt")
