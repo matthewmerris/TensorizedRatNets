@@ -95,7 +95,7 @@ class Lenet5(Module):
 
         self.layers = nn.ModuleDict({
             'layer_0' : Conv2dBlock(in_chan=1, out_chan=6, ker_sz=5, stride_sz=1),
-            'layer_1' : nn.AvgPool2d(kernel_size=2)
+            'layer_1' : nn.AvgPool2d(kernel_size=2),
             'layer_2' : Conv2dBlock(in_chan=6, out_chan=16,ker_sz=5, stride_sz=1),
             'layer_3' : nn.AvgPool2d(kernel_size=2),
             'layer_4' : Conv2dBlock(in_chan=16, out_chan=120, ker_sz=5, stride_sz=1),
