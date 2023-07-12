@@ -14,6 +14,16 @@ class LinearBlock(nn.Module):
         y = self.rat(y)
         return y
 
+class LinearOut(nn.Module):
+    def __init__(self, n_dim_in: int, n_dim_out: int):
+        super().__init__()
+        self.linear = nn.Linear(n_dim_in, n_dim_out)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        y = self.linear(x)
+        return y
+
+
 class Lenet300100(Module):
     def __init__(self, UseRational=False, UseRELU=False):
         super(Lenet300100, self).__init__()
@@ -39,7 +49,7 @@ class Lenet300100(Module):
         self.layers = nn.ModuleDict({
             'layer_0' : LinearBlock(28*28, 300),
             'layer_1' : LinearBlock(300,100),
-            'layer_2' : nn.Linear(100,10)
+            'layer_2' : LinearOut(100,10)
         })
 
 

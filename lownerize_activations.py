@@ -31,7 +31,8 @@ for i in range(act_in.shape[0]):
 
 ## stack into a mode-3 tensor and save to .mat format
 act_tensor = np.dstack(loewnerized_act)
-savemat("act_tensor.mat", {"array": act_tensor}, do_compression=False)
+act_tensor_mini = act_tensor[:, :, 0:499]
+# savemat("act_tensor.mat", {"array": act_tensor}, do_compression=False)
 
 ## decompose (all in matlab, using tensorlab??)
 num_block_terms = 10
@@ -39,6 +40,6 @@ num_block_terms = 10
 block_rank = 3  #  we know the rational activation function is degree 3, ie. Loewner matrix is rank 3
 L = np.ones(num_block_terms, order='F') * block_rank
 breakpoint()
-# Uhat = eng.ll1(np.ascontiguousarray(act_tensor), L)
+Uhat = eng.ll1(np.ascontiguousarray(act_tensor_mini), L)
 
 breakpoint()

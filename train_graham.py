@@ -101,7 +101,7 @@ if __name__ == '__main__':
 
     storage = Storage()
     # can do it like this:
-    storage.setup(layers=[model.layers.layer_0.linear, model.layers.layer_0.rat])
+    storage.setup(layers=[model.layers.layer_0.linear, model.layers.layer_0.rat, model.layers.layer_1.linear, model.layers.layer_1.rat, model.layers.layer_2.linear])
     # or like storage.setup(model, iter_fn=model.named_modules)
 
     for epoch in range(n_epoch):
@@ -134,9 +134,10 @@ if __name__ == '__main__':
         os.makedirs(epoch_save_dir_train, exist_ok=True)
         os.makedirs(epoch_save_dir_test, exist_ok=True)
 
-        save_data = storage.saveable()
-        for key, item in save_data.items():
-            np.save(f"{epoch_save_dir_train}/{key}.npy", item)
+        if epoch == n_epoch - 1:
+            save_data = storage.saveable()
+            for key, item in save_data.items():
+                np.save(f"{epoch_save_dir_train}/{key}.npy", item)
 
         correct = 0
         seen = 0
@@ -151,9 +152,10 @@ if __name__ == '__main__':
             correct += (predict_ys == test_label).sum().item()
             seen += len(test_label)
 
-        save_data = storage.saveable()
-        for key, item in save_data.items():
-            np.save(f"{epoch_save_dir_test}/{key}.npy", item)
+        if epoch == n_epoch - 1:
+            save_data = storage.saveable()
+            for key, item in save_data.items():
+                np.save(f"{epoch_save_dir_test}/{key}.npy", item)
 
         print('accuracy: {:.6f}'.format(correct / seen))
 
