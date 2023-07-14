@@ -22,6 +22,11 @@ act_in = act_in.reshape((act_in.shape[0]*act_in.shape[1]), act_in.shape[2])
 act_out = act_out.reshape((act_out.shape[0]*act_out.shape[1]), act_out.shape[2])
 
 ## convert save as .mat files
+data_path = "./tmp/"
+in_path = f"{data_path}in{args.activations_in.split('.')[0][-1]}"
+savemat(in_path, {"array":act_in}, do_compression=False)
+out_path = f"{data_path}out{ars.activations_out.split('.')[0][-1]}"
+savemat(out_path, {"array":act_out}, do_compression=False)
 
 ## fire up the matlab engine
 eng = matlab.engine.start_matlab("-nodesktop")
