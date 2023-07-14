@@ -1,6 +1,8 @@
 import argparse
 import numpy as np
 import matlab.engine
+import matlab
+
 from scipy.io import savemat, loadmat
 
 ## parse some arguments
@@ -18,6 +20,8 @@ act_out = np.load(args.activations_out)
 ## reshape into matrices
 act_in = act_in.reshape((act_in.shape[0]*act_in.shape[1]), act_in.shape[2])
 act_out = act_out.reshape((act_out.shape[0]*act_out.shape[1]), act_out.shape[2])
+
+## convert save as .mat files
 
 ## fire up the matlab engine
 eng = matlab.engine.start_matlab("-nodesktop")
