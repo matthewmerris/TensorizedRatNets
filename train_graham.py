@@ -10,6 +10,7 @@ from torchvision.transforms import ToTensor
 import os
 import sys
 import shutil
+from scipy.io import savemat
 
 UseRational = True
 
@@ -99,6 +100,15 @@ if __name__ == '__main__':
     cost = CrossEntropyLoss()
     n_epoch = 100
 
+    # save test targets
+    targets = []
+    for dum, biznatch in enumerate(test_loader):
+        targets.append(biznatch[1])
+    targets = torch.cat(targets, 0)
+    targets = targets.numpy()
+    savemat(f"{activations_dir}/test/targets.mat", {"array":targets}, do_compression=False)
+    np.save(f"{activations_dir}/test/targets.npy", targets)
+
     storage = Storage()
     # can do it like this:
     storage.setup(layers=[model.layers.layer_0.linear, model.layers.layer_0.rat, model.layers.layer_1.linear, model.layers.layer_1.rat, model.layers.layer_2.linear])
@@ -161,3 +171,5 @@ if __name__ == '__main__':
 
         os.makedirs(model_save_dir, exist_ok=True)
         torch.save(model.state_dict(), f"{model_save_dir}/model_state_{epoch}.pt")
+
+

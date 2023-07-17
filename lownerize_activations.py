@@ -21,34 +21,35 @@ act_out = np.load(args.activations_out)
 act_in = act_in.reshape((act_in.shape[0]*act_in.shape[1]), act_in.shape[2])
 act_out = act_out.reshape((act_out.shape[0]*act_out.shape[1]), act_out.shape[2])
 
+# breakpoint()
 ## convert save as .mat files
 data_path = "./tmp/"
-in_path = f"{data_path}in{args.activations_in.split('.')[0][-1]}"
+in_path = f"{data_path}in{args.activations_in.split('.')[1][-1]}.mat"
 savemat(in_path, {"array":act_in}, do_compression=False)
-out_path = f"{data_path}out{ars.activations_out.split('.')[0][-1]}"
+out_path = f"{data_path}out{args.activations_out.split('.')[1][-1]}.mat"
 savemat(out_path, {"array":act_out}, do_compression=False)
 
 ## fire up the matlab engine
-eng = matlab.engine.start_matlab("-nodesktop")
-
-## Lownerize matrix rows
-loewnerized_act = []
-for i in range(act_in.shape[0]):
-    loewn = eng.loewnerize(act_out[i,:],act_in[i,:])
-    loewn = np.asarray(loewn)
-    loewnerized_act.append(loewn)
-
-## stack into a mode-3 tensor and save to .mat format
-act_tensor = np.dstack(loewnerized_act)
-act_tensor_mini = act_tensor[:, :, 0:499]
-# savemat("act_tensor.mat", {"array": act_tensor}, do_compression=False)
-
-## decompose (all in matlab, using tensorlab??)
-num_block_terms = 10
-
-block_rank = 3  #  we know the rational activation function is degree 3, ie. Loewner matrix is rank 3
-L = np.ones(num_block_terms, order='F') * block_rank
-breakpoint()
-Uhat = eng.ll1(np.ascontiguousarray(act_tensor_mini), L)
-
-breakpoint()
+# eng = matlab.engine.start_matlab("-nodesktop")
+#
+# ## Lownerize matrix rows
+# loewnerized_act = []
+# for i in range(act_in.shape[0]):
+#     loewn = eng.loewnerize(act_out[i,:],act_in[i,:])
+#     loewn = np.asarray(loewn)
+#     loewnerized_act.append(loewn)
+#
+# ## stack into a mode-3 tensor and save to .mat format
+# act_tensor = np.dstack(loewnerized_act)
+# act_tensor_mini = act_tensor[:, :, 0:499]
+# # savemat("act_tensor.mat", {"array": act_tensor}, do_compression=False)
+#
+# ## decompose (all in matlab, using tensorlab??)
+# num_block_terms = 10
+#
+# block_rank = 3  #  we know the rational activation function is degree 3, ie. Loewner matrix is rank 3
+# L = np.ones(num_block_terms, order='F') * block_rank
+# breakpoint()
+# Uhat = eng.ll1(np.ascontiguousarray(act_tensor_mini), L)
+#
+# breakpoint()
