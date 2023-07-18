@@ -102,11 +102,11 @@ if __name__ == '__main__':
 
     # save test targets
     targets = []
-    for dum, biznatch in enumerate(test_loader):
-        targets.append(biznatch[1])
+    for dummy, batch in enumerate(test_loader):
+        targets.append(batch[1])
     targets = torch.cat(targets, 0)
     targets = targets.numpy()
-    savemat(f"{activations_dir}/test/targets.mat", {"array":targets}, do_compression=False)
+    # savemat(f"{activations_dir}/test/targets.mat", {"array":targets}, do_compression=False)
     np.save(f"{activations_dir}/test/targets.npy", targets)
 
     storage = Storage()

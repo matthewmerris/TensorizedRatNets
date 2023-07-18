@@ -1,7 +1,7 @@
 %% developing the loewnerization based pruning regiment
 % load data for the first layer activations
-act_in_path = "./tmp/in0.mat";
-act_out_path = "./tmp/out1.mat";
+act_in_path = "./tmp/in0_0s.mat";
+act_out_path = "./tmp/out1_0s.mat";
 
 act_in = double(cell2mat(struct2cell(load(act_in_path))));
 act_out = double(cell2mat(struct2cell(load(act_out_path))));
@@ -25,6 +25,6 @@ for i = 1:mode3
 end
 
 %%
-L = 10.*ones(3,1);
+L = 3.*ones(300,1);
 
 tic; act_model = ll1(act_ten, L); toc;
