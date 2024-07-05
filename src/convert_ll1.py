@@ -19,14 +19,14 @@ def convert_ll1(U, convert_to):
     if convert_to == 'numpy':
         for term_list in U:
             for idx, factor in enumerate(term_list):
-                temp = np.array(factor.tolist())
-                term_list[idx] = temp.reshape(factor.size).transpose()
+                temp = np.array(factor)
+                term_list[idx] = temp
 
     elif convert_to == 'matlab':
         # convert from numpy to matlab.double
         for term_list in U:
             for idx, factor in enumerate(term_list):
-                term_list[idx] = matlab.double(factor.tolist())
+                term_list[idx] = matlab.double(factor)
     else:
         print("Conversion type not supported, data returned as received")
 
