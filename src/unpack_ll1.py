@@ -28,9 +28,9 @@ def unpack_ll1(U):
 
     # cycle through each term and collect relavent columns
     for i in range(num_terms):
-        factor_0 = np.append(factor_0, np.asarray(U[i][0]))
-        factor_1 = np.append(factor_1, np.asarray(U[i][1]))
-        factor_2 = np.append(factor_2, np.asarray(U[i][2]))
+        factor_0 = np.hstack(factor_0, np.asarray(U[i][0]))
+        factor_1 = np.hstack(factor_1, np.asarray(U[i][1]))
+        factor_2 = np.hstack(factor_2, np.asarray(U[i][2]))
 
     # construct the block structured core tensor
     core = np.zeros((L*num_terms, L*num_terms))

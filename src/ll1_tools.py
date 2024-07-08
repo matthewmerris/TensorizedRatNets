@@ -30,9 +30,11 @@ def pack_ll1(U):
 
     # cycle through each term and collect relavent columns
     for i in range(num_terms):
-        factor_0 = np.append(factor_0, np.asarray(U[i][0]))
-        factor_1 = np.append(factor_1, np.asarray(U[i][1]))
-        factor_2 = np.append(factor_2, np.asarray(U[i][2]))
+        lo = i * L
+        hi = lo + L
+        factor_0[:, lo:hi] = np.asarray(U[i][0])
+        factor_1[:, lo:hi] = np.asarray(U[i][1])
+        factor_2[:, lo:hi] = np.asarray(U[i][2])
 
     # construct the block structured core tensor
     core = np.zeros((L*num_terms, L*num_terms))
@@ -63,7 +65,7 @@ def unpack_ll1(U):
     U_mod = list()
     for i in range(num_terms):
         lo = i*L
-        hi = lo + L - 1
+        hi = lo + L
         tmp_0 = U[0][:, lo:hi]
         tmp_1 = U[1][:, lo:hi]
         tmp_2 = U[2][:, i]
