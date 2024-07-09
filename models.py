@@ -23,6 +23,61 @@ class LinearOut(nn.Module):
         y = self.linear(x)
         return y
 
+class LenetLinear(Module):
+    def __init__(self, UseRational=False, UseRELU=False):
+        super(LenetLinear, self).__init__()
+
+        # Determine activation to use
+        if UseRational:
+            activation = Rational()
+        elif UseRELU:
+            activation = nn.ReLU()
+        else:
+            activation = nn.Tanh()
+
+
+        # Alternate approach, using ModuleDict
+        self.layers = nn.ModuleDict({
+            'layer_0' : LinearBlock(20*20, 10),
+            'layer_1' : LinearOut(10,10)
+        })
+
+
+    def forward(self, x):
+        x = torch.flatten(x, start_dim=1)
+        for layer in self.layers.values():
+            x = layer(x)
+        # breakpoint()
+
+        return x
+
+class Lenet300(Module):
+    def __init__(self, UseRational=False, UseRELU=False):
+        super(Lenet300, self).__init__()
+
+        # Determine activation to use
+        if UseRational:
+            activation = Rational()
+        elif UseRELU:
+            activation = nn.ReLU()
+        else:
+            activation = nn.Tanh()
+
+
+        # Alternate approach, using ModuleDict
+        self.layers = nn.ModuleDict({
+            'layer_0' : LinearBlock(20*20, 300),
+            'layer_1' : LinearOut(300,10)
+        })
+
+
+    def forward(self, x):
+        x = torch.flatten(x, start_dim=1)
+        for layer in self.layers.values():
+            x = layer(x)
+        # breakpoint()
+
+        return x
 
 class Lenet300100(Module):
     def __init__(self, UseRational=False, UseRELU=False):

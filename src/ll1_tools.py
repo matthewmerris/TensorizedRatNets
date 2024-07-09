@@ -60,7 +60,11 @@ def unpack_ll1(U):
 
     # gather dimensional info
     num_terms = U[2].shape[1]
-    L = U[0].shape[1] / num_terms
+    L = U[0].shape[1] // num_terms
+    # print('Num terms:')
+    # print(num_terms)
+    # print('L: ')
+    # print(L)
 
     U_mod = list()
     for i in range(num_terms):
@@ -74,6 +78,10 @@ def unpack_ll1(U):
             tmp_3[j, j] = 1
 
         tmp_list = [tmp_0, tmp_1, tmp_2, tmp_3]
+        print('Unpacked into:')
+        for factor in tmp_list:
+            print(factor)
+        print('Yay!')
         U_mod.append(tmp_list)
 
     return U_mod
