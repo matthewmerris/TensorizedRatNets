@@ -81,6 +81,7 @@ class Storage:
 if __name__ == '__main__':
     batch_size = 256
     N_CLASSES = 10
+    # ********************************** Transform dataset if necessary  **********************************
     train_dataset = mnist.MNIST(
         root=f'{data_dir}',
         train=True,
@@ -129,7 +130,7 @@ if __name__ == '__main__':
     storage = Storage()
     # can do it like this:
     # storage.setup(layers=[model.layers.layer_0.linear, model.layers.layer_0.rat, model.layers.layer_1.linear, model.layers.layer_1.rat, model.layers.layer_2.linear])
-    # or like
+    # or like  !!!! more general approach, might make deciphering saved activation outputs and inputs challenging !!!!
     storage.setup(model, iter_fn=model.named_modules)
 
     for epoch in range(n_epoch):
