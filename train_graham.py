@@ -1,12 +1,12 @@
 from typing import List, Union
-from models import Lenet5, Lenet300100
+from models import Lenet5, Lenet300100, Lenet300, LenetLinear
 import numpy as np
 import torch
 from torchvision.datasets import mnist
 from torch.nn import CrossEntropyLoss
 from torch.optim import SGD
 from torch.utils.data import DataLoader
-from torchvision.transforms import ToTensor
+from torchvision.transforms import ToTensor, Resize, Compose
 import os
 import sys
 import shutil
@@ -81,13 +81,30 @@ class Storage:
 if __name__ == '__main__':
     batch_size = 256
     N_CLASSES = 10
-    train_dataset = mnist.MNIST(root=f'{data_dir}', train=True, transform=ToTensor(), download=True)
+    train_dataset = mnist.MNIST(
+        root=f'{data_dir}',
+        train=True,
+        transform=Compose(
+            [Resize(20), ToTensor()]
+        ),
+        download=True
+    )
+    test_dataset = mnist.MNIST(
+        root=f'{data_dir}',
+        train=False,
+        transform=Compose(
+            [Resize(20), ToTensor()]
+        ),
+        download=True)
 
-    test_dataset = mnist.MNIST(root=f'{data_dir}', train=False, transform=ToTensor(), download=True)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, drop_last=True)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, drop_last=True)
 
-    model = Lenet300100(UseRational)  # Model(UseRational)
+    # ********************************** specify model to train **********************************
+    # model = Lenet300100(UseRational)  # Model(UseRational)
+    # model = LenetLinear(UseRational)
+    model = Lenet300(UseRational)
+    
     model.to(device)
     layers = list(model.named_children())
     # breakpoint()
@@ -111,8 +128,9 @@ if __name__ == '__main__':
 
     storage = Storage()
     # can do it like this:
-    storage.setup(layers=[model.layers.layer_0.linear, model.layers.layer_0.rat, model.layers.layer_1.linear, model.layers.layer_1.rat, model.layers.layer_2.linear])
-    # or like storage.setup(model, iter_fn=model.named_modules)
+    # storage.setup(layers=[model.layers.layer_0.linear, model.layers.layer_0.rat, model.layers.layer_1.linear, model.layers.layer_1.rat, model.layers.layer_2.linear])
+    # or like
+    storage.setup(model, iter_fn=model.named_modules)
 
     for epoch in range(n_epoch):
         model.train()
