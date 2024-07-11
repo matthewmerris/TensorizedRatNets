@@ -18,7 +18,10 @@ def pack_ll1(U):
 
     # gather approriate dimensional info
     num_terms = len(U)
-    L = np.asarray(U[0][0]).shape[1]
+    if len(np.asarray(U[0][0]).shape) > 1:
+        L = np.asarray(U[0][0]).shape[1] // num_terms
+    else:
+        L = 1
     dim_mode0 = np.asarray(U[0][0]).shape[0]
     dim_mode1 = np.asarray(U[0][1]).shape[0]
     dim_mode2 = np.asarray(U[0][2]).shape[0]
@@ -30,11 +33,16 @@ def pack_ll1(U):
 
     # cycle through each term and collect relavent columns
     for i in range(num_terms):
-        lo = i * L
-        hi = lo + L
-        factor_0[:, lo:hi] = np.asarray(U[i][0])
-        factor_1[:, lo:hi] = np.asarray(U[i][1])
-        factor_2[:, lo:hi] = np.asarray(U[i][2])
+        if L > 1:
+            lo = i * L
+            hi = lo + L
+            factor_0[:, lo:hi] = np.asarray(U[i][0])
+            factor_1[:, lo:hi] = np.asarray(U[i][1])
+            factor_2[:, lo:hi] = np.asarray(U[i][2])
+        else:
+            factor_0[:, i] = np.asarray(U[i][0])
+            factor_1[:, i] = np.asarray(U[i][1])
+            factor_2[:, i] = np.asarray(U[i][2])
 
     # construct the block structured core tensor
     core = np.zeros((L*num_terms, L*num_terms))
@@ -68,20 +76,26 @@ def unpack_ll1(U):
 
     U_mod = list()
     for i in range(num_terms):
-        lo = i*L
-        hi = lo + L
-        tmp_0 = U[0][:, lo:hi]
-        tmp_1 = U[1][:, lo:hi]
-        tmp_2 = U[2][:, i]
-        tmp_3 = np.zeros((L, L))
-        for j in range(L):
-            tmp_3[j, j] = 1
+        if L > 1:
+            lo = i*L
+            hi = lo + L
+            tmp_0 = U[0][:, lo:hi]
+            tmp_1 = U[1][:, lo:hi]
+            tmp_2 = U[2][:, i]
+            tmp_3 = np.zeros((L, L))
+            for j in range(L):
+                tmp_3[j, j] = 1
+        else:
+            tmp_0 = U[0][:, i]
+            tmp_1 = U[1][:, i]
+            tmp_2 = U[2][:, i]
+            tmp_3 = np.ones(1)
 
         tmp_list = [tmp_0, tmp_1, tmp_2, tmp_3]
-        print('Unpacked into:')
-        for factor in tmp_list:
-            print(factor)
-        print('Yay!')
+        # print('Unpacked into:')
+        # for factor in tmp_list:
+        #     print(factor)
+        # print('Yay!')
         U_mod.append(tmp_list)
 
     return U_mod
@@ -98,7 +112,7 @@ def convert_ll1(U, convert_to):
     U_mod : list of numpy arrays (i.e. factor matrices) consolidating
             the column vectors for each term and their respective modes.
     """
-    convert_to = type.lower()
+    convert_to = convert_to.lower()
 
     if convert_to == 'numpy':
         for term_list in U:
@@ -108,9 +122,11 @@ def convert_ll1(U, convert_to):
 
     elif convert_to == 'matlab':
         # convert from numpy to matlab.double
+        eng = matlab.engine.start_matlab()
         for term_list in U:
             for idx, factor in enumerate(term_list):
                 term_list[idx] = matlab.double(factor)
+        eng.quit()
     else:
         print("Conversion type not supported, data returned as received")
 
