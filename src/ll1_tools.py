@@ -100,6 +100,7 @@ def unpack_ll1(U):
 
 def convert_ll1(U, convert_to):
     """Helper function to convert between numpy array and matlab.double
+    Parameters
     __________
     U : list of lists of matlab.double arrays or numpy arrays (i.e. a list of arrays
         for each term of LL1 decomposition)
@@ -130,3 +131,12 @@ def convert_ll1(U, convert_to):
 
     return U
 
+def recover_sources(X,M):
+    """Reconver source matrix in BSS problem (X = MS)
+    Parameters
+    __________
+    X : numpy array (matrix), observed data
+    M : numpy array (matrix), mixing matrix recovered from (L,L,1) decomp
+    """
+    S = np.matmul(M.T, X)
+    return S
