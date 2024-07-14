@@ -18,10 +18,8 @@ def pack_ll1(U):
 
     # gather approriate dimensional info
     num_terms = len(U)
-    if len(np.asarray(U[0][0]).shape) > 1:
-        L = np.asarray(U[0][0]).shape[1] // num_terms
-    else:
-        L = 1
+    L = np.asarray(U[0][0]).shape[1]
+
     dim_mode0 = np.asarray(U[0][0]).shape[0]
     dim_mode1 = np.asarray(U[0][1]).shape[0]
     dim_mode2 = np.asarray(U[0][2]).shape[0]
