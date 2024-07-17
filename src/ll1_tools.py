@@ -138,5 +138,5 @@ def recover_sources(X,M):
     X : numpy array (matrix), observed data
     M : numpy array (matrix), mixing matrix recovered from (L,L,1) decomp
     """
-    S = np.matmul(M.T, X)
+    S = np.matmul(np.linalg.pinv(M), X)
     return S

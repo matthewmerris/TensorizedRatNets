@@ -85,26 +85,28 @@ if __name__ == '__main__':
     train_dataset = mnist.MNIST(
         root=f'{data_dir}',
         train=True,
-        transform=Compose(
-            [Resize(20), ToTensor()]
-        ),
+        transform=ToTensor(),
+        # transform=Compose(
+        #     [Resize(20), ToTensor()]
+        # ),
         download=True
     )
     test_dataset = mnist.MNIST(
         root=f'{data_dir}',
         train=False,
-        transform=Compose(
-            [Resize(20), ToTensor()]
-        ),
+        transform=ToTensor(),
+        # transform=Compose(
+        #     [Resize(20), ToTensor()]
+        # ),
         download=True)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, drop_last=True)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, drop_last=True)
 
     # ********************************** specify model to train **********************************
-    # model = Lenet300100(UseRational)  # Model(UseRational)
+    model = Lenet300100(UseRational)  # Model(UseRational)
     # model = LenetLinear(UseRational)
-    model = Lenet300(UseRational)
+    # model = Lenet300(UseRational)
     
     model.to(device)
     layers = list(model.named_children())
