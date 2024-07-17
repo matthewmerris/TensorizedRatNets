@@ -2,6 +2,46 @@ import numpy as np
 import matlab.engine
 import matlab
 
+def split_data(inputs_raw, outputs_raw, targets, tensorlab_path, num_sets):
+    """Randomly split activations into a specified number of subsets and lownerize
+
+    Parameters
+    ___________
+
+    Returns
+    ___________
+    lwn_tns :
+    observations:
+    """
+
+    # reshape inputs and outputs to matrices
+    inputs = inputs_raw.reshape(-1, inputs_raw.shape[-1])
+    outputs = outputs_raw.reshape(-1, outputs_raw.shape[-1])
+
+    num_obs = inputs.shape[0]
+    num_set_rows = num_obs // num_sets
+    # split into specified number of sets
+    # @@ probably should do some error handling on here for num sets vs num observations
+    observations = []
+    obs_targets = []
+    for i in range(num_sets):
+        tmp_obs = outputs[(i*num_set_rows):(i*num_set_rows + num_set_rows)]
+        observations.append(tmp_obs)
+        tmp_trgts = targets[(i*num_set_rows):(i*num_set_rows + num_set_rows)]
+        obs_targets.append(tmp_trgts)
+
+    # Loewnerize activations
+    eng = matlab.engine.start_matlab()
+    s = eng.genpath(tensorlab_path)
+    eng.addpath(s, nargout=0)
+
+    lwn_tns = list()
+    for idx, obs in enumerate(observations):
+        
+
+
+
+
 def pack_ll1(U):
     """Helper function to unpack Tensorlab's (matlab) LL1
     tensor (3 factor matrices and a core tensor)
