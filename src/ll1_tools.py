@@ -1,6 +1,7 @@
 import numpy as np
 import matlab.engine
 import matlab
+import math
 
 def split_data(inputs_raw, outputs_raw, targets, tensorlab_path, num_sets):
     """Randomly split activations into a specified number of subsets and lownerize
@@ -23,10 +24,13 @@ def split_data(inputs_raw, outputs_raw, targets, tensorlab_path, num_sets):
     # split into specified number of sets
     # @@ probably should do some error handling on here for num sets vs num observations
     observations = []
+    obs_inputs =[]
     obs_targets = []
     for i in range(num_sets):
         tmp_obs = outputs[(i*num_set_rows):(i*num_set_rows + num_set_rows)]
         observations.append(tmp_obs)
+        tmp_inputs = inputs[(i*num_set_rows):(i*num_set_rows + num_set_rows)]
+        obs_inputs.append(tmp_inputs)
         tmp_trgts = targets[(i*num_set_rows):(i*num_set_rows + num_set_rows)]
         obs_targets.append(tmp_trgts)
 
@@ -35,9 +39,19 @@ def split_data(inputs_raw, outputs_raw, targets, tensorlab_path, num_sets):
     s = eng.genpath(tensorlab_path)
     eng.addpath(s, nargout=0)
 
+    I = math.ceil(inputs.shape[1] / 2)
+    J = inputs.shape[1] - I
+
     lwn_tns = list()
     for idx, obs in enumerate(observations):
-        
+        lwn_tns.append(np.empty((I,J,0)))
+        for i in range(num_set_rows):
+            tmp_lwn = eng.loewnerize(obs[i,:], 'T', obs_inputs[idx][i,:], nargout=1)
+            lwn_tns[idx] = np.dstack((lwn_tns[idx], tmp_lwn))
+
+    eng.quit()
+
+    return lwn_tns, observations, obs_targets
 
 
 
