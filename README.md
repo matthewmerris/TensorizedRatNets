@@ -4,4 +4,5 @@ This approach is made possible owing to rational function approximation of the p
 Employing rational function approximation for ReLU in neural networks allows a network's activations to be deterministically transformed into tensors via a process called Lownerization.  
 
 ## Dependencies
-- Rational Neural Nets - 
+- [RationalNets](https://github.com/NBoulle/RationalNets/)
+- [Tensorlab library](https://tensorlab.net/)
