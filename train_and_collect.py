@@ -6,15 +6,18 @@ from torchvision.datasets import mnist
 from torch.nn import CrossEntropyLoss
 from torch.optim import SGD
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 from torchvision.transforms import ToTensor, Resize, Compose
 import os
 import sys
 import shutil
 from scipy.io import savemat
+from pathlib import Path
 
 UseRational = True
 
 data_dir = "data"
+Path(data_dir).mkdir(parents=True, exist_ok=True)
 # activations_dir = f"{data_dir}/lenet-mnist/activations"
 device = sys.argv[1] if len(sys.argv) > 1 else "cpu"
 assert device in ["cpu", "cuda"]
@@ -81,6 +84,8 @@ class Storage:
 if __name__ == '__main__':
     batch_size = 256
     N_CLASSES = 10
+    n_epoch = 50
+    
     # ********************************** Transform dataset if necessary  **********************************
     train_dataset = mnist.MNIST(
         root=f'{data_dir}',
@@ -102,25 +107,40 @@ if __name__ == '__main__':
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, drop_last=True)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, drop_last=True)
-
+    
+    # ********************************** set-up tensorboard ************************************** 
+    writer = SummaryWriter('runs/lenet5_expr_1')
+    # writer = SummaryWriter('runs/lenet300100_expr_1')
+    
     # ********************************** specify model to train **********************************
-    model = Lenet300100(UseRational)  # Model(UseRational)
+    model = Lenet5(UseRational)
+    # model = Lenet300100(UseRational)  # Model(UseRational)
     # model = LenetLinear(UseRational)
     # model = Lenet300(UseRational)
     
     model.to(device)
     layers = list(model.named_children())
-    # breakpoint()
-
-    run_data_dir = f"{data_dir}/{model.__class__.__name__}"
-    activations_dir = f"{run_data_dir}/activations"
-    model_save_dir = f"{run_data_dir}/model"
-
+    
+    # log model graph
+    dummy_input = train_loader.dataset[0]
+    print(dummy_input)
+    writer.add_graph(model, dummy_input[0])
+    
+    # ********************************* specify loss criterion (cost) & optimizer (SGD) 
     sgd = SGD(model.parameters(), lr=1e-1)
     cost = CrossEntropyLoss()
-    n_epoch = 100
+    # breakpoint()
 
-    # save test targets
+    # ******************************** directory setup
+    run_data_dir = f"{data_dir}/{model.__class__.__name__}"
+    activations_dir = f"{run_data_dir}/activations"
+    Path(activations_dir).mkdir(parents=True, exist_ok=True)
+    Path(f"{activations_dir}/test").mkdir(parents=True, exist_ok=True)
+    model_save_dir = f"{run_data_dir}/model"
+    Path(activations_dir).mkdir(parents=True, exist_ok=True)
+
+
+    # ******************************** save test targets
     targets = []
     for dummy, batch in enumerate(test_loader):
         targets.append(batch[1])
@@ -129,6 +149,7 @@ if __name__ == '__main__':
     # savemat(f"{activations_dir}/test/targets.mat", {"array":targets}, do_compression=False)
     np.save(f"{activations_dir}/test/targets.npy", targets)
 
+    # ******************************** setup Storage class for collecting layer activations ***********
     storage = Storage()
     # can do it like this:
     # storage.setup(layers=[model.layers.layer_0.linear, model.layers.layer_0.rat, model.layers.layer_1.linear, model.layers.layer_1.rat, model.layers.layer_2.linear])
@@ -136,6 +157,9 @@ if __name__ == '__main__':
     storage.setup(model, iter_fn=model.named_modules)
 
     for epoch in range(n_epoch):
+        # ********************* TRAIN ********************************
+        correct = 0
+        seen = 0
         model.train()
         storage.reset()
         for idx, (train_x, train_label) in enumerate(train_loader):
@@ -146,10 +170,15 @@ if __name__ == '__main__':
             sgd.zero_grad()
             predict_y = model(train_x.float())
             loss = cost(predict_y, train_label.long())
+            predict_ys = predict_y.argmax(dim=-1)
+            correct += (predict_ys == train_label).sum().item()
+            seen += len(train_label)
+            writer.add_scalar('Accuracy/train', correct / seen, epoch) 
             if idx % 10 == 0:
                 print('idx: {}, loss: {}'.format(idx, loss.sum().item()))
             loss.backward()
             sgd.step()
+            writer.add_scalar('Loss/train', loss.sum().item(), epoch)
 
         epoch_save_dir_train = f"{activations_dir}/train/{epoch}"
         epoch_save_dir_test = f"{activations_dir}/test/{epoch}"
@@ -170,6 +199,7 @@ if __name__ == '__main__':
             for key, item in save_data.items():
                 np.save(f"{epoch_save_dir_train}/{key}.npy", item)
 
+        # ********************* TEST ********************************
         correct = 0
         seen = 0
 
@@ -182,6 +212,10 @@ if __name__ == '__main__':
             predict_ys = predict_y.argmax(dim=-1)
             correct += (predict_ys == test_label).sum().item()
             seen += len(test_label)
+            writer.add_scalar('Accuracy/test', correct / seen, epoch)
+
+            loss = cost(predict_y, test_label.long())
+            writer.add_scalar('Loss/test', loss.sum().item(), epoch)
 
         if epoch == n_epoch - 1:
             save_data = storage.saveable()
@@ -193,4 +227,6 @@ if __name__ == '__main__':
         os.makedirs(model_save_dir, exist_ok=True)
         torch.save(model.state_dict(), f"{model_save_dir}/model_state_{epoch}.pt")
 
-
+    # ********************* close the tensorboard writer ****************************************
+    writer.flush()
+    writer.close()

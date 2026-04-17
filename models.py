@@ -118,9 +118,9 @@ class Lenet300100(Module):
 
 ## Repeat architectural setup for Lenet5 (i.e. convolutional block set up)
 class Conv2dBlock(nn.Module):
-    def __init__(self, in_chan: int, out_chan: int, ker_sz: int, stride_sz: int):
+    def __init__(self, in_chan: int, out_chan: int, ker_sz: int, stride_sz: int, padding_sz: int=0):
         super().__init__()
-        self.conv = nn.Conv2d(in_channels=in_chan,out_channels=out_chan, kernel_size=ker_sz, stride=stride_sz)
+        self.conv = nn.Conv2d(in_channels=in_chan,out_channels=out_chan, kernel_size=ker_sz, stride=stride_sz, padding=padding_sz)
         self.rat = Rational()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -129,6 +129,37 @@ class Conv2dBlock(nn.Module):
         return y
 
 class Lenet5(Module):
+    def __init__(self, n_classes, UseRational=False, UseRELU=False):
+        super(Lenet5, self).__init__()
+
+        # Determine activation to use
+        if UseRational:
+            activation = Rational()
+        elif UseRELU:
+            activation = nn.ReLU()
+        else:
+            activation = nn.Tanh()
+
+        self.layers = nn.ModuleDict({
+            'layer_0' : Conv2dBlock(in_chan=1, out_chan=6, ker_sz=5, stride_sz=1, padding_sz=2), # padding added
+            'layer_1' : nn.AvgPool2d(kernel_size=2, stride=2), # stride added
+            'layer_2' : Conv2dBlock(in_chan=6, out_chan=16,ker_sz=5, stride_sz=1),
+            'layer_3' : nn.AvgPool2d(kernel_size=2, stride=2), # stride added
+            'layer_4' : Conv2dBlock(in_chan=16, out_chan=120, ker_sz=5, stride_sz=1),
+            'layer_5' : LinearBlock(n_dim_in=120, n_dim_out=84),
+            'layer_6' : nn.Linear(in_features=84, out_features=10)
+        })
+
+    def forward(self, x):
+        # x = torch.flatten(x, start_dim=1)
+        for idx, layer in enumerate(self.layers.values()):
+            if idx == 5:
+                x = torch.flatten(x, start_dim=1)
+            x = layer(x)
+        x = nn.functional.softmax(x)
+        return x
+
+class Lenet5_old(Module):
     def __init__(self, n_classes, UseRational=False, UseRELU=False):
         super(Lenet5, self).__init__()
 
@@ -158,15 +189,6 @@ class Lenet5(Module):
             nn.Linear(in_features=84, out_features=n_classes)
         )
 
-        self.layers = nn.ModuleDict({
-            'layer_0' : Conv2dBlock(in_chan=1, out_chan=6, ker_sz=5, stride_sz=1),
-            'layer_1' : nn.AvgPool2d(kernel_size=2),
-            'layer_2' : Conv2dBlock(in_chan=6, out_chan=16,ker_sz=5, stride_sz=1),
-            'layer_3' : nn.AvgPool2d(kernel_size=2),
-            'layer_4' : Conv2dBlock(in_chan=16, out_chan=120, ker_sz=5, stride_sz=1),
-            'layer_5' : LinearBlock(n_dim_in=120, n_dim_out=84),
-            'layer_6' : nn.Linear(in_features=84, out_features=10)
-        })
 
     def forward(self, x):
         x = self.feature_extractor(x)
