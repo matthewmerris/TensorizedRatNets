@@ -84,26 +84,40 @@ class Storage:
 if __name__ == '__main__':
     batch_size = 256
     N_CLASSES = 10
-    n_epoch = 50
+    n_epoch = 20
     
     # ********************************** Transform dataset if necessary  **********************************
+    # for Lenet 300 100
+#    train_dataset = mnist.MNIST(
+#        root=f'{data_dir}',
+#        train=True,
+#        transform=ToTensor(),
+#        download=True
+#    )
+#    test_dataset = mnist.MNIST(
+#        root=f'{data_dir}',
+#        train=False,
+#        transform=ToTensor(),
+#        download=True
+#    )
+
+    # for Lenet 5
     train_dataset = mnist.MNIST(
         root=f'{data_dir}',
         train=True,
-        transform=ToTensor(),
-        # transform=Compose(
-        #     [Resize(20), ToTensor()]
-        # ),
+        transform=Compose([
+            Resize((32,32)),
+            ToTensor()]),
         download=True
     )
     test_dataset = mnist.MNIST(
         root=f'{data_dir}',
         train=False,
-        transform=ToTensor(),
-        # transform=Compose(
-        #     [Resize(20), ToTensor()]
-        # ),
-        download=True)
+        transform=Compose([
+            Resize((32,32)),
+            ToTensor()]),
+        download=True
+    )
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, drop_last=True)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, drop_last=True)
@@ -122,9 +136,9 @@ if __name__ == '__main__':
     layers = list(model.named_children())
     
     # log model graph
-    dummy_input = train_loader.dataset[0]
-    print(dummy_input)
-    writer.add_graph(model, dummy_input[0])
+#    dummy_input = train_loader.dataset[0]
+#    print(dummy_input)
+#    writer.add_graph(model, dummy_input[0])
     
     # ********************************* specify loss criterion (cost) & optimizer (SGD) 
     sgd = SGD(model.parameters(), lr=1e-1)

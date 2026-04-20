@@ -141,7 +141,7 @@ class Lenet5(Module):
             activation = nn.Tanh()
 
         self.layers = nn.ModuleDict({
-            'layer_0' : Conv2dBlock(in_chan=1, out_chan=6, ker_sz=5, stride_sz=1, padding_sz=2), # padding added
+            'layer_0' : Conv2dBlock(in_chan=1, out_chan=6, ker_sz=5, stride_sz=1), # , padding_sz=2), # padding added
             'layer_1' : nn.AvgPool2d(kernel_size=2, stride=2), # stride added
             'layer_2' : Conv2dBlock(in_chan=6, out_chan=16,ker_sz=5, stride_sz=1),
             'layer_3' : nn.AvgPool2d(kernel_size=2, stride=2), # stride added
