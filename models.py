@@ -129,7 +129,8 @@ class Conv2dBlock(nn.Module):
         return y
 
 class Lenet5(Module):
-    def __init__(self, n_classes, UseRational=False, UseRELU=False):
+    def __init__(self, UseRational=False, UseRELU=False):
+#    def __init__(self, UseRational=False, UseRELU=False):
         super(Lenet5, self).__init__()
 
         # Determine activation to use
@@ -156,7 +157,7 @@ class Lenet5(Module):
             if idx == 5:
                 x = torch.flatten(x, start_dim=1)
             x = layer(x)
-        x = nn.functional.softmax(x)
+#        x = nn.functional.softmax(x)
         return x
 
 class Lenet5_old(Module):

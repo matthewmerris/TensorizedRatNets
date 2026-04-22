@@ -84,7 +84,7 @@ class Storage:
 if __name__ == '__main__':
     batch_size = 256
     N_CLASSES = 10
-    n_epoch = 20
+    n_epoch = 25
     
     # ********************************** Transform dataset if necessary  **********************************
     # for Lenet 300 100
@@ -141,7 +141,7 @@ if __name__ == '__main__':
 #    writer.add_graph(model, dummy_input[0])
     
     # ********************************* specify loss criterion (cost) & optimizer (SGD) 
-    sgd = SGD(model.parameters(), lr=1e-1)
+    optimizer = SGD(model.parameters(), lr=1e-1)
     cost = CrossEntropyLoss()
     # breakpoint()
 
@@ -181,19 +181,19 @@ if __name__ == '__main__':
             # breakpoint()
             train_x, train_label = train_x.to(device), train_label.to(device)
             # breakpoint()
-            sgd.zero_grad()
+            optimizer.zero_grad()
             predict_y = model(train_x.float())
             loss = cost(predict_y, train_label.long())
             predict_ys = predict_y.argmax(dim=-1)
             correct += (predict_ys == train_label).sum().item()
-            seen += len(train_label)
-            writer.add_scalar('Accuracy/train', correct / seen, epoch) 
+            seen += len(train_label)             
             if idx % 10 == 0:
                 print('idx: {}, loss: {}'.format(idx, loss.sum().item()))
             loss.backward()
-            sgd.step()
+            optimizer.step()
             writer.add_scalar('Loss/train', loss.sum().item(), epoch)
 
+        writer.add_scalar('Accuracy/train', correct / seen, epoch)
         epoch_save_dir_train = f"{activations_dir}/train/{epoch}"
         epoch_save_dir_test = f"{activations_dir}/test/{epoch}"
 
