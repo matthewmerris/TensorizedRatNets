@@ -21,7 +21,7 @@ Path(data_dir).mkdir(parents=True, exist_ok=True)
 # activations_dir = f"{data_dir}/lenet-mnist/activations"
 device = sys.argv[1] if len(sys.argv) > 1 else "cpu"
 assert device in ["cpu", "cuda"]
-
+print(device)
 
 class Storage:
     def __init__(self):
@@ -84,7 +84,7 @@ class Storage:
 if __name__ == '__main__':
     batch_size = 256
     N_CLASSES = 10
-    n_epoch = 25
+    n_epoch = 100
     
     # ********************************** Transform dataset if necessary  **********************************
     # for Lenet 300 100
@@ -172,6 +172,7 @@ if __name__ == '__main__':
 
     for epoch in range(n_epoch):
         # ********************* TRAIN ********************************
+        print(f'Begin epoch: {epoch}')
         correct = 0
         seen = 0
         model.train()
@@ -205,10 +206,12 @@ if __name__ == '__main__':
             shutil.rmtree(epoch_save_dir_train)
 
         # breakpoint()
-        os.makedirs(epoch_save_dir_train, exist_ok=True)
-        os.makedirs(epoch_save_dir_test, exist_ok=True)
+#        os.makedirs(epoch_save_dir_train, exist_ok=True)
+#        os.makedirs(epoch_save_dir_test, exist_ok=True)
 
         if epoch == n_epoch - 1:
+            os.makedirs(epoch_save_dir_train, exist_ok=True)
+            os.makedirs(epoch_save_dir_test, exist_ok=True)
             save_data = storage.saveable()
             for key, item in save_data.items():
                 np.save(f"{epoch_save_dir_train}/{key}.npy", item)

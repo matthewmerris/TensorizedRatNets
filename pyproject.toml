@@ -7,12 +7,14 @@ requires-python = ">=3.12"
 dependencies = [
     "ipykernel>=7.2.0",
     "jupyter>=1.1.1",
+    "kneed>=0.8.6",
     "matlabengine==24.2.2",
     "matplotlib>=3.10.8",
     "numpy>=2.4.4",
     "scikit-learn>=1.8.0",
     "tensorboard>=2.20.0",
     "tensorly>=0.9.0",
+    "tlviz>=0.1.1",
     "torch>=2.11.0",
     "torchvision>=0.26.0",
 ]
