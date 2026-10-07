@@ -2,6 +2,7 @@ from typing import List, Union
 from models import Lenet5, Lenet300100, Lenet300, LenetLinear
 import numpy as np
 import torch
+import torchvision
 from torchvision.datasets import mnist
 from torch.nn import CrossEntropyLoss
 from torch.optim import SGD
@@ -105,46 +106,20 @@ if __name__ == '__main__':
         model = Lenet300(UseRational)
         model_path = None
     elif model_name == "lenet300100":
-        model = Lenet300100(UseRational)
+        model = Lenet300100(UseRational).to(device)
         model_path = "./data/Lenet300100/model/model_state_99.pt"
+        model.load_state_dict(torch.load(model_path))
     elif model_name == "lenet5":
-        model = Lenet5(UseRational)
+        model = Lenet5(UseRational).to(device)
         model_path = "./data/Lenet5/model/model_state_99.pt"
+        model.load_state_dict(torch.load(model_path))
     else:
         print(f"Model: {model_name} not supported")
         sys.exit(1)
-    writer = SummaryWriter(f'runs/{model_name}_expr_1')
-        
-    model.to(device)
+    model.eval()
+    writer = SummaryWriter(f'runs/{model_name}_expr_1_alt_datasets')
     layers = list(model.named_children())
-    
-    # log model graph
-#    dummy_input = train_loader.dataset[0]
-#    print(dummy_input)
-#    writer.add_graph(model, dummy_input[0])
-    
-    # ********************************* specify loss criterion (cost) & optimizer (SGD) 
-    optimizer = SGD(model.parameters(), lr=1e-1)
     cost = CrossEntropyLoss()
-    # breakpoint()
-
-    # ******************************** directory setup
-    run_data_dir = f"{data_dir}/{model.__class__.__name__}"
-    activations_dir = f"{run_data_dir}/activations"
-    Path(activations_dir).mkdir(parents=True, exist_ok=True)
-    Path(f"{activations_dir}/test").mkdir(parents=True, exist_ok=True)
-    model_save_dir = f"{run_data_dir}/model"
-    Path(activations_dir).mkdir(parents=True, exist_ok=True)
-
-
-    # ******************************** save test targets
-    targets = []
-    for dummy, batch in enumerate(test_loader):
-        targets.append(batch[1])
-    targets = torch.cat(targets, 0)
-    targets = targets.numpy()
-    # savemat(f"{activations_dir}/test/targets.mat", {"array":targets}, do_compression=False)
-    np.save(f"{activations_dir}/test/targets.npy", targets)
 
     # ******************************** setup Storage class for collecting layer activations ***********
     storage = Storage()
@@ -152,82 +127,106 @@ if __name__ == '__main__':
     # storage.setup(layers=[model.layers.layer_0.linear, model.layers.layer_0.rat, model.layers.layer_1.linear, model.layers.layer_1.rat, model.layers.layer_2.linear])
     # or like  !!!! more general approach, might make deciphering saved activation outputs and inputs challenging !!!!
     storage.setup(model, iter_fn=model.named_modules)
+    
+    # ******************************** directory setup
+    run_data_dir = f"{data_dir}/{model.__class__.__name__}"
+    activations_dir = f"{run_data_dir}/activations"
+    advgan_activations_dir = f"{activations_dir}/advgan"
+    qmnist_activations_dir = f"{activations_dir}/qmnist"
+    Path(activations_dir).mkdir(parents=True, exist_ok=True)
+    Path(advgan_activations_dir).mkdir(parents=True, exist_ok=True)
+    Path(qmnist_activations_dir).mkdir(parents=True, exist_ok=True)
 
-    for epoch in range(n_epoch):
-        # ********************* TRAIN ********************************
-        if epoch % 10 == 0:
-            print(f'Begin epoch: {epoch}')
-        correct = 0
-        seen = 0
-        model.train()
-        storage.reset()
-        for idx, (train_x, train_label) in enumerate(train_loader):
-            label_np = np.zeros((train_label.shape[0], 10))
-            # breakpoint()
-            train_x, train_label = train_x.to(device), train_label.to(device)
-            # breakpoint()
-            optimizer.zero_grad()
-            predict_y = model(train_x.float())
-            loss = cost(predict_y, train_label.long())
-            predict_ys = predict_y.argmax(dim=-1)
-            correct += (predict_ys == train_label).sum().item()
-            seen += len(train_label)             
-            if idx % 100 == 0:
-                print('idx: {}, loss: {}'.format(idx, loss.sum().item()))
-            loss.backward()
-            optimizer.step()
-            writer.add_scalar('Loss/train', loss.sum().item(), epoch)
+    # ******************************* set-up for advgan dataset
+    if model_name == "lenet300100":
+        advgan_data_path = "/home/matthewmerris/repos/advGAN_pytorch/dataset/adv_mnist_test_lenet300100.pt"
+    elif model_name == "lenet5":
+        advgan_data_path = "/home/matthewmerris/repos/advGAN_pytorch/dataset/adv_mnist_test_lenet5.pt"
+    else:
+        print("advGAN dataset currently unavailable for specified model")
+        sys.exit(1)
+    
+    advgan_dataset = torch.load(advgan_data_path,weights_only=False)
+    advgan_loader = DataLoader(advgan_dataset, batch_size=batch_size, drop_last=True)
+        
 
-        writer.add_scalar('Accuracy/train', correct / seen, epoch)
-        epoch_save_dir_train = f"{activations_dir}/train/{epoch}"
-        epoch_save_dir_test = f"{activations_dir}/test/{epoch}"
+    # ******************************** save advGAN targets
+    advgan_targets = []
+    for dummy, batch in enumerate(advgan_loader):
+        advgan_targets.append(batch[1])
+    advgan_targets = torch.stack(advgan_targets, dim=0)
+    advgan_targets = advgan_targets.numpy()
+    np.save(f"{advgan_activations_dir}/targets.npy", advgan_targets)
 
-        # delete the old data, if its there
-        if os.path.exists(epoch_save_dir_test):
-            shutil.rmtree(epoch_save_dir_test)
 
-        if os.path.exists(epoch_save_dir_train):
-            shutil.rmtree(epoch_save_dir_train)
+    correct = 0
+    seen = 0
+    storage.reset()
+    for idx, (test_x, test_label) in enumerate(advgan_loader):
+        test_x, test_label = test_x.to(device), test_label.to(device)
+        predict_y = model(test_x.float().to(device))
 
-        # breakpoint()
-#        os.makedirs(epoch_save_dir_train, exist_ok=True)
-#        os.makedirs(epoch_save_dir_test, exist_ok=True)
+        predict_ys = predict_y.argmax(dim=-1)
+        correct += (predict_ys == test_label).sum().item()
+        seen += len(test_label)
+        writer.add_scalar('Accuracy/test', correct / seen, idx)
 
-        if epoch == n_epoch - 1:
-            os.makedirs(epoch_save_dir_train, exist_ok=True)
-            os.makedirs(epoch_save_dir_test, exist_ok=True)
-            save_data = storage.saveable()
-            for key, item in save_data.items():
-                np.save(f"{epoch_save_dir_train}/{key}.npy", item)
+        loss = cost(predict_y, test_label.long())
+        writer.add_scalar('Loss/test', loss.sum().item(), idx)
+    print('advGAN accuracy: {:.6f}'.format(correct / seen))
+            
+    save_data = storage.saveable()
+    for key, item in save_data.items():
+        np.save(f"{advgan_activations_dir}/{key}.npy", item)
 
-        # ********************* TEST ********************************
-        correct = 0
-        seen = 0
+    # ******************************** set up for qmnist dataset
+    # Need to adjust for Lenet5 architecture
+    if model_name == "lenet5":
+        qmnist_dataset = torchvision.datasets.QMNIST(
+            root=f"{data_dir}",
+            what="test50k",
+            download=True,
+            transform=Compose([
+                Resize((32,32)),
+                ToTensor()])
+        )
+    elif model_name == "lenet300100":
+        qmnist_dataset = torchvision.datasets.QMNIST(
+            root=f"{data_dir}",
+            what="test50k",
+            download=True,
+            transform=ToTensor()
+        )    
+    qmnist_loader = DataLoader(qmnist_dataset, batch_size=batch_size, drop_last=True)
+    
+    # ******************************** save qmnist targets
+    '''
+    qmnist_targets = []
+    for dummy, batch in enumerate(qmnist_loader):
+        qmnist_targets.append(batch[1])
+    advgan_targets = torch.stack(qmnist_targets, dim=0)
+    advgan_targets = qmnist_targets.numpy()
+    np.save(f"{qmnist_activations_dir}/targets.npy", qmnist_targets)
+    '''
+    qmnist_targets = qmnist_dataset.targets.numpy
+    np.save(f"{qmnist_activations_dir}/targets.npy", qmnist_targets)
+    
+    correct = 0
+    seen = 0
+    storage.reset()
+    for idx, (test_x, test_label) in enumerate(qmnist_loader):
+        test_x, test_label = test_x.to(device), test_label.to(device)
+        predict_y = model(test_x.float().to(device))
 
-        model.eval()
-        storage.reset()
-        for idx, (test_x, test_label) in enumerate(test_loader):
-            test_x, test_label = test_x.to(device), test_label.to(device)
-            predict_y = model(test_x.float().to(device))
+        predict_ys = predict_y.argmax(dim=-1)
+        correct += (predict_ys == test_label).sum().item()
+        seen += len(test_label)
+        writer.add_scalar('Accuracy/test', correct / seen, idx)
 
-            predict_ys = predict_y.argmax(dim=-1)
-            correct += (predict_ys == test_label).sum().item()
-            seen += len(test_label)
-            writer.add_scalar('Accuracy/test', correct / seen, epoch)
-
-            loss = cost(predict_y, test_label.long())
-            writer.add_scalar('Loss/test', loss.sum().item(), epoch)
-
-        if epoch == n_epoch - 1:
-            save_data = storage.saveable()
-            for key, item in save_data.items():
-                np.save(f"{epoch_save_dir_test}/{key}.npy", item)
-
-        print('accuracy: {:.6f}'.format(correct / seen))
-
-        os.makedirs(model_save_dir, exist_ok=True)
-        torch.save(model.state_dict(), f"{model_save_dir}/model_state_{epoch}.pt")
-
-    # ********************* close the tensorboard writer ****************************************
-    writer.flush()
-    writer.close()
+        loss = cost(predict_y, test_label.long())
+        writer.add_scalar('Loss/test', loss.sum().item(), idx)
+    print('QMNIST accuracy: {:.6f}'.format(correct / seen))
+            
+    save_data = storage.saveable()
+    for key, item in save_data.items():
+        np.save(f"{qmnist_activations_dir}/{key}.npy", item)
