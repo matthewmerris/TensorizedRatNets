@@ -6,10 +6,7 @@ def unfold_two_modes(tensor):
     """
     Unfolds a 3rd-order tensor T of shape (I, J, K) along its first two modes.
     
-    In TensorLy, mode-2 unfolding produces a matrix of shape (K, I * J),
-    where rows represent mode 2 (K) and columns represent the flattened 
-    modes 0 and 1 (I, J). Transposing this yields shape (I * J, K).
-    
+    Forms matrix columns as column-wise vectorization of k-th mode frontal slices
     Parameters
     ----------
     tensor : ndarray or TensorLy tensor
@@ -21,10 +18,11 @@ def unfold_two_modes(tensor):
         The matricized tensor T_{IJ x K} of shape (I * J, K).
     """
     # Mode-2 unfolding yields shape (K, I * J)
-    unfolded_k = tl.unfold(tensor, mode=2)
-    
-    # Transpose to obtain shape (I * J, K)
-    return tl.transpose(unfolded_k)
+    unfolded_k = []
+    for kdx in range(tensor.shape[2]):
+        unfolded_k.append(tl.reshape(tensor[:,:,kdx], -1, 'F'))
+    unfolded_k = np.column_stack(unfolded_k)
+    return tl.tensor(unfolded_k)
 # Set TensorLy backend (numpy)
 
 
