@@ -79,7 +79,7 @@ def compress_tensors(A, B, n_modes=None, tol=1e-10):
     for mode in range(n_modes):
         A_unfolded = mode_n_matricization(compressed_A, mode)
         _,S,Vh = tn.svd(A_unfolded, full_matrices=False)
-        rank = int(np.sum(S > tol * S) if len(S) > 0 else 0
+        rank = int(np.sum(S > tol * S) if len(S) > 0 else 0)
         if rank == 0:
             continue
 
@@ -170,7 +170,7 @@ def tensor_similarity_score(A,B):
         truncated_lambdas = np.array([l[:min_len] for l in mode_lambdas])
         mean_spec = np.mean(truncated_lambdas, axis=0)
         std_spec = np.std(truncated_lambdas, axis=0)
-        rel_disp = np.mean(std_spec / (np.abs(mean_spec) + 1e-12)
+        rel_disp = np.mean(std_spec / (np.abs(mean_spec) + 1e-12))
         spec_consistency = max(0.0, float(1 - rel_disp))
     else:
         spec_consistency = 0.0
@@ -185,6 +185,6 @@ def tensor_similarity_score(A,B):
         'spectral_consistency': round(spec_consistency, 6),
         'mode_residuals': [round(1.0 - f, 6) for f in fit_scores],
         'shared_rank_R': min_len,
-        'estimated_scaling_factors': np.round(mean_spectrum, 4).tolist()
+        'estimated_scaling_factors': np.round(mean_spec, 4).tolist()
     }
 
